@@ -25,9 +25,7 @@ import com.example.egci428_currentlocation24.databinding.ActivityMapsBinding
 
 class maps : AppCompatActivity(), OnMapReadyCallback {
 
-    private lateinit var mMap: GoogleMap
-    private lateinit var binding: ActivityMapsBinding
-
+    private var k = 0
     private var locationManager: LocationManager? = null
     private var locationListener: LocationListener? = null
     private var currentLatLng: LatLng? = null
@@ -36,12 +34,25 @@ class maps : AppCompatActivity(), OnMapReadyCallback {
     private var mapBtn: Button? = null
     private var textView: TextView? = null
 
+    private lateinit var mMap: GoogleMap
+    private lateinit var binding: ActivityMapsBinding
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+        mapBtn = findViewById(R.id.mnapBtn)
+        mapBtn!!.setOnClickListener {
+            mMap.addMarker(
+                MarkerOptions().position(currentLatLng!!).title(currentLatLng.toString())
+            )
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng!!, 8F))
+            println("MAP clicked")
+        }
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mapBtn = findViewById(R.id.mnapBtn)
-        gpsBtn = findViewById(R.id.gpsBtn)
-        textView = findViewById(R.id.textView)
+
 
 
         binding = ActivityMapsBinding.inflate(layoutInflater)
@@ -53,9 +64,10 @@ class maps : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        locationListener = object : LocationListener {
+        locationListener = object: LocationListener{
             override fun onLocationChanged(location: Location){
-                textView!!.text = location.latitude.toString() + "," + location.longitude.toString()
+                textView = findViewById(R.id.textView)
+                textView?.text = location.latitude.toString() + "," + location.longitude.toString()
                 currentLatLng = LatLng(location.latitude,location.longitude)
             }
             override fun onProviderDisabled(provider: String){
@@ -64,19 +76,12 @@ class maps : AppCompatActivity(), OnMapReadyCallback {
                 startActivity(intent)
             }
         }
-        requestLocation()
+        Thread.sleep(1000)
+        request_location()
+
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-
-       mapBtn!!.setOnClickListener {
-           mMap.addMarker(MarkerOptions().position(currentLatLng!!).title(currentLatLng.toString()))
-           mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng!!,8F))
-       }
-    }
-
-    private fun requestLocation() {
+    private fun request_location() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 //requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.INTERNET), 10)
@@ -85,9 +90,11 @@ class maps : AppCompatActivity(), OnMapReadyCallback {
             return
         }
 
+        gpsBtn = findViewById(R.id.gpsBtn)
         gpsBtn!!.setOnClickListener {
-            locationManager!!.requestLocationUpdates("gps",5000, 0F, locationListener!!)
+            locationManager!!.requestLocationUpdates("gps", 5000, 0F, locationListener!!)
         }
+
     }
 
 }
